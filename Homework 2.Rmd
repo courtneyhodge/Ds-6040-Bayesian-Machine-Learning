@@ -1,0 +1,85 @@
+---
+title: "Homework 2 - Priors and Data"
+author: "Courtney Hodge"
+date: "2024-10-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+wine <- read.csv("C:\\Users\\hodge\\Downloads\\whitewine-training-ds6040.csv")
+```
+
+# Part 1: Using Conjucate Priors with White-Wine Data (33pts)
+* Choose 2 continuous predictors and plot density plots (using ggplot2)
+```{r}
+library(ggplot2)
+
+ggplot(wine, aes(x = pH)) +
+  geom_density(fill = "orange", alpha = 0.5) +
+  ggtitle(paste("Density Plot of pH in wine data" ))
+
+ggplot(wine, aes(x = alcohol)) + 
+  geom_density(fill = "darkblue", alpha = 0.5) +
+  ggtitle(paste("Density Plot of alcohol in wine data"))
+```
+* For each predictor, consider the density plot. What do you notice? Do they look like they
+are normally distributed? Skewed?
+
+> For the pH predictor, the denisty plot looks similar to a normal distribution centered around 0 pH with an extremely slight skew right, which is not bad at all. There's also symetry with this distribution. 
+> For the alcohol predictor, there is not a normal distrbution of this data. If anything, it is very strongly skewed right, with a peak around -1.
+
+## 1. 
+
+Using a normal likelihood with known variance (the known variance for each variable is
+the observed variance, go ahead and calculate that), 
+
+use the appropriate conjugate prior
+and calculate out the posterior distribution (you should be able to look up the formula for
+the posteriors, no need to derive them out yourself). When you calculate these posterior
+distributions, use two sets of hyperparameters (per variable), one where the
+hyperparameters specify a fairly uninformative prior, and the other where the
+hyperparameters are much more informative (this doesn't need to be a reasonable value
+either, this exercise is to demonstrate the impact of hyperparameter choice). At the end of
+this exercise, you should have the parameters for 4 posterior distributions.
+
+```{r}
+#calculate the sample variance and mean
+mean_pH <- mean(wine$pH)
+var_pH <- var(wine$pH)
+
+mean_alcohol <- mean(wine$alcohol)
+var_alcohol <- var(wine$alcohol)
+
+#print results
+print("The mean and variance of pH:")
+mean_pH
+var_pH
+
+print("The mean and variance of alcohol:")
+
+mean_alcohol
+var_alcohol
+```
+Likelihood:
+* The data is normally distributed w/ a known var of 1
+$X_i$ ~ $$
+
+Posterior for pH
+* Uninformative Prior $(\mu_0 = 0, \sigma^2 = 1000):$
+```{r}
+
+```
+
+* Informative Prior $(\mu_0 = 0.-2, \sigma^2 = 0.01):$
+```{r}
+
+```
+
