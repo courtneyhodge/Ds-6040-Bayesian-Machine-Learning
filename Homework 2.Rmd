@@ -3,6 +3,9 @@ title: "Homework 2 - Priors and Data"
 author: "Courtney Hodge"
 date: "2024-10-07"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -17,8 +20,11 @@ library(tidyverse)
 wine <- read.csv("C:\\Users\\hodge\\Downloads\\whitewine-training-ds6040.csv")
 ```
 
-# Part 1: Using Conjucate Priors with White-Wine Data (33pts)
-* Choose 2 continuous predictors and plot density plots (using ggplot2)
+# Part 1: Using Conjugate Priors with White-Wine Data (33pts)
+
+-   Choose 2 continuous predictors and plot density plots (using
+    ggplot2)
+
 ```{r}
 library(ggplot2)
 
@@ -30,56 +36,631 @@ ggplot(wine, aes(x = alcohol)) +
   geom_density(fill = "darkblue", alpha = 0.5) +
   ggtitle(paste("Density Plot of alcohol in wine data"))
 ```
-* For each predictor, consider the density plot. What do you notice? Do they look like they
-are normally distributed? Skewed?
 
-> For the pH predictor, the denisty plot looks similar to a normal distribution centered around 0 pH with an extremely slight skew right, which is not bad at all. There's also symetry with this distribution. 
-> For the alcohol predictor, there is not a normal distrbution of this data. If anything, it is very strongly skewed right, with a peak around -1.
+-   For each predictor, consider the density plot. What do you notice?
+    Do they look like they are normally distributed? Skewed?
 
-## 1. 
+> For the pH predictor, the denisty plot looks similar to a normal
+> distribution centered around 0 pH with an extremely slight skew right,
+> which is not bad at all. There's also symetry with this distribution.
+> For the alcohol predictor, there is not a normal distrbution of this
+> data. If anything, it is very strongly skewed right, with a peak
+> around -1.
 
-Using a normal likelihood with known variance (the known variance for each variable is
-the observed variance, go ahead and calculate that), 
+## Now, for each variable please do the following:
 
-use the appropriate conjugate prior
-and calculate out the posterior distribution (you should be able to look up the formula for
-the posteriors, no need to derive them out yourself). When you calculate these posterior
-distributions, use two sets of hyperparameters (per variable), one where the
-hyperparameters specify a fairly uninformative prior, and the other where the
-hyperparameters are much more informative (this doesn't need to be a reasonable value
-either, this exercise is to demonstrate the impact of hyperparameter choice). At the end of
-this exercise, you should have the parameters for 4 posterior distributions.
+### 1.
+
+Using a normal likelihood with known variance (the known variance for
+each variable is the observed variance, go ahead and calculate that),
+
+use the appropriate conjugate prior and calculate out the posterior
+distribution (you should be able to look up the formula for the
+posteriors, no need to derive them out yourself). When you calculate
+these posterior distributions, use two sets of hyperparameters (per
+variable), one where the hyperparameters specify a fairly uninformative
+prior, and the other where the hyperparameters are much more informative
+(this doesn't need to be a reasonable value either, this exercise is to
+demonstrate the impact of hyperparameter choice). At the end of this
+exercise, you should have the parameters for 4 posterior distributions.
+
+------------------------------------------------------------------------
+
+DOUBLE CHECK THIS
 
 ```{r}
-#calculate the sample variance and mean
-mean_pH <- mean(wine$pH)
-var_pH <- var(wine$pH)
+# Split data into pH and alcohol
+pH_data <- wine[c(9)] # pH column
+alcohol_data <- wine[c(10)] # alcohol column
 
-mean_alcohol <- mean(wine$alcohol)
-var_alcohol <- var(wine$alcohol)
+#Number of samples
+n_pH <- length(pH_data) #pH column
+n_alcohol <- length(alcohol_data) #alcohol column
 
-#print results
-print("The mean and variance of pH:")
-mean_pH
-var_pH
+#uninformative prior parameters for both pH and alcohol
+mu_0_uninform <- 0
+tau_0_uninform <- 1000 #large variance
 
-print("The mean and variance of alcohol:")
+#known variance (since data is standardized)
+sigma_sq <- 1
 
-mean_alcohol
-var_alcohol
+#sample means (standardized data has mean close to 0)
+x_bar_pH <- 0
+x_bar_alcohol <- 0
+
+#----
+#Uninformative Priors
+
+#posterior calculations for uninformative prior
+mu_post_uninform <- function(n, sigma_sq, x_bar, mu_0, tau_0_sq) {
+  ( (n / sigma_sq) * x_bar + (1 / tau_0_sq) * mu_0 ) / ( (n / sigma_sq) + (1 / tau_0_sq) )
+}
+
+tau_post_uninform <- function(n, sigma_sq, tau_0_sq) {
+  1 / ( (n / sigma_sq) + (1 / tau_0_sq) )
+}
+
+# posterior for pH (uninformative prior)
+mu_post_pH_uninform <- mu_post_uninform(n_pH, sigma_sq, x_bar_pH, mu_0_uninform, tau_0_uninform)
+
+tau_post_pH_uninform <- tau_post_uninform(n_pH, sigma_sq, tau_0_uninform)
+
+# Posterior for alcohol (uninformative prior)
+mu_post_alcohol_uninform <- mu_post_uninform(n_alcohol, sigma_sq, x_bar_alcohol, mu_0_uninform, tau_0_uninform)
+
+tau_post_alcohol_uninform <- tau_post_uninform(n_alcohol, sigma_sq, tau_0_uninform)
+
+
+mu_post_pH_uninform
+tau_post_pH_uninform
+
+mu_post_alcohol_uninform
+tau_post_alcohol_uninform
 ```
-Likelihood:
-* The data is normally distributed w/ a known var of 1
-$X_i$ ~ $$
 
-Posterior for pH
-* Uninformative Prior $(\mu_0 = 0, \sigma^2 = 1000):$
 ```{r}
+#Informative Priors
+mu_0_pH_inform <- -0.2
+tau_0_pH_inform <- 0.01
 
+mu_0_alcohol_inform <- -0.7
+tau_0_alcohol_inform <- 0.01
+
+#posterior for pH (informative prior)
+mu_post_pH_inform <- mu_post_uninform(n_pH, sigma_sq, x_bar_pH, mu_0_pH_inform, tau_0_pH_inform)
+
+tau_post_pH_inform <- tau_post_uninform(n_pH, sigma_sq, tau_0_pH_inform)
+
+#posterior for alcohol (informative prior)
+mu_post_alcohol_inform <- mu_post_uninform(n_alcohol, sigma_sq, x_bar_alcohol, mu_0_alcohol_inform, tau_0_alcohol_inform)
+
+tau_post_alcohol_inform <- tau_post_uninform(n_alcohol, sigma_sq, tau_0_alcohol_inform)
+
+mu_post_pH_inform
+tau_post_pH_inform
+
+mu_post_alcohol_inform
+tau_post_alcohol_inform
 ```
 
-* Informative Prior $(\mu_0 = 0.-2, \sigma^2 = 0.01):$
+### 2.
+
+What are the impacts of different hyperparameter choices on the
+posterior distributions? Is it possible to chose "bad" hyperparameters?
+If so, why? What are the consequences for inference?
+
+> The hyperparameter choices do significantly affect the posterior
+> distribution. Informative priors can pull the posterior toward the
+> prior belief, which is great if the prior is accurate, but can lead to
+> bias if it's not. Uninformative priors let the data dominate, reducing
+> bias but underutilizing prior knowledge.
+
+> It is possible to choose bad hyperparameters. An incorrect mean of a
+> very small variance could cause biased posteriors or overconfident
+> estimates.
+
+> The consequences for inference are incorrect conclusions, misinformed
+> decision, and poor predictions.
+
+## Now, we are going to repeat the process, but this time using a different likelihood function.
+
+### 1.
+Repeat the previous work, but this time use an exponential likelihood and corresponding conjugate prior (again, you can look this up and get the formula that way).
+
 ```{r}
+#Taking absolute values (since exponential distribution assumes positive values)
+pH_data <- abs(pH_data)
+alcohol_data <- abs(alcohol_data)
+
+#Sums of the data
+sum_pH <- sum(pH_data)
+sum_alcohol <- sum(alcohol_data)
+
+#uninformative Prior
+alpha_uninform <- 1
+beta_uninform <- 1
+
+#informative prior
+alpha_inform <- 5
+beta_inform <- 0.5
+
+#sums of the data (since exponential assumes non-negative values, we use asbolute values)
+sum_pH <- sum(pH_data)
+sum_alcohol <- sum(alcohol_data)
+
+#posterior calculations for uninformative prior
+alpha_post_pH_uninform <- alpha_uninform + n_alcohol
+
+beta_post_pH_uninform <- beta_uninform + sum_pH
+
+alpha_post_alcohol_uninform <- alpha_uninform + n_alcohol
+beta_post_alcohol_uninform <- beta_uninform + sum_alcohol
+
+cat("Posterior for pH (Uninformative Prior): Alpha =", alpha_post_pH_uninform, ", Beta =", beta_post_pH_uninform, "\n\n")
+cat("Posterior for Alcohol (Uninformative Prior): Alpha =", alpha_post_alcohol_uninform, ", Beta =", beta_post_alcohol_uninform, "\n")
+```
+```{r}
+#informative prior
+# Posterior calculations for informative prior
+alpha_post_pH_inform <- alpha_inform + n_pH
+beta_post_pH_inform <- beta_inform + sum_pH
+
+alpha_post_alcohol_inform <- alpha_inform + n_alcohol
+beta_post_alcohol_inform <- beta_inform + sum_alcohol
+
+cat("Posterior for pH (Informative Prior): Alpha =", alpha_post_pH_inform, ", Beta =", beta_post_pH_inform, "\n\n")
+
+cat("Posterior for Alcohol (Informative Prior): Alpha =", alpha_post_alcohol_inform, ", Beta =", beta_post_alcohol_inform, "\n")
+```
+
+
+### 2. 
+Again, what are the impacts of the hyperparameter choice?
+
+> The impacts of the hyperparameter choice here is that the uninformed priors of alpha = 1 and beta = 1 become dominated by the observed data. Because the uninformative priors are week, this allows the posterior to closely reflect the data, and the posterior distribution will have a wide spread, or high variance, which is great if we have little prior knowledge.
+
+> The informative prior implies a strong prior knowldge, which influences the posterior. Since the alpha and beta parameters are larger and are 5 and 0.5 respectfully, the posterior will be less flexible. This results in the data's impact being reduced and the posterior is pulled towards the prior beliefs.
+
+### 3. 
+In the previous example, it was very simple for you to interpret the parameters in the posteriors. In this case, you will need to calculate the expected value and variance of the posterior distribution. You can look this up for the distribution (use Wikipedia!). How do these values differ from the values you found when using a normal distribution as the likelihood?
+ 
+```{r}
+#calculating the expected value and variance for the Gamma posterior
+
+#pH (uninformative prior)
+expected_pH_uninform <- alpha_post_pH_uninform / beta_post_pH_uninform
+
+variance_pH_uninform <- alpha_post_pH_uninform / (beta_post_pH_uninform ^ 2)
+
+#alcohol (uninformative prior)
+expected_alcohol_uninform <- alpha_post_alcohol_uninform / beta_post_alcohol_uninform
+
+variance_alcohol_uninform <- alpha_post_alcohol_uninform / (beta_post_alcohol_uninform ^2)
+
+# Print the results
+cat("Uninformative Prior Results:\n")
+
+cat("Expected value for pH:", expected_pH_uninform, "\n")
+
+cat("Variance for pH:", variance_pH_uninform, "\n\n")
+
+cat("Expected value for alcohol:", expected_alcohol_uninform, "\n")
+
+cat("Variance for alcohol:", variance_alcohol_uninform, "\n\n")
 
 ```
+
+```{r}
+# For pH (informative prior)
+expected_pH_inform <- alpha_post_pH_inform / beta_post_pH_inform
+variance_pH_inform <- alpha_post_pH_inform / (beta_post_pH_inform^2)
+
+# For alcohol (informative prior)
+expected_alcohol_inform <- alpha_post_alcohol_inform / beta_post_alcohol_inform
+variance_alcohol_inform <- alpha_post_alcohol_inform / (beta_post_alcohol_inform^2)
+
+cat("Informative Prior Results:\n")
+cat("Expected value for pH:", expected_pH_inform, "\n")
+cat("Variance for pH:", variance_pH_inform, "\n\n")
+
+cat("Expected value for alcohol:", expected_alcohol_inform, "\n")
+cat("Variance for alcohol:", variance_alcohol_inform, "\n")
+```
+
+> The key difference is that in the exponential likelihood case, the posterior distrbution is skewed and depends on the sum of the data. On the other hand, the normal likelihood posterior is symmetric and centered around the mean of the data.
+
+# Part 2: Multinominal Priors for Wine Quality (33 points)
+
+The quality variable in this dataset is a categorical variable with values taking letter grades (A,
+C, F). We can consider this variable to be multinomially distributed. Multinomial distributions
+have a conjugate prior in the Dirichlet distribution. The Dirichlet distribution can be
+parameterized using either a single α parameter that applies to each category, or you can
+specify a different αk parameter for each category. In any case, the posterior distribution for a
+multinomial-Dirichlet model is Dirichlet(α + n) , where α is a vector of either all the same
+number, or the hyperparameter choice per category, and n is a vector of the counts of each
+category.
+
+### 1.
+Looking at the above formula for the posterior distribution, how can you interpret the
+meaning of α?
+
+> We can interpret the meaning of alpha as the affect of how much weight our prior beliefs have compared to the observed data. 
+
+>If we have multiple categories, like A, C, and F, larger values for alpha will indicate stronger confidence, in our prior beleif, meaning the data will have less impact on the posterior distribution. 
+
+> If we have smaller values for alpha, this means we have a weaker prior, allowing for observed data to have a larger impact on shaping the posterior.
+
+> Lastly, if all elements of alpha are equal, this implies an assumption of equal likelihood for each category in the prior.
+
+### 2. 
+Choosing two sets of hyperparameters, one fairly uninformative and one highly
+informative, generate 1000 observations from the posterior distributions (using rdirichlet
+from the dirmult R package). At the end of this generative process, you should have two
+data.frames or matrices that have 1000 rows and 3 columns.
+
+```{r}
+#load library
+library(dirmult)
+
+#two sets of hyperparameters
+#one fairly uninformative
+alpha_uninform <- c(1,1,1)
+
+#one highly informative
+alpha_inform <- c(10, 50, 40)
+
+#generate 1000 samples from Dirichlet posterior
+set.seed(123)
+samples_uninform <- rdirichlet(1000, alpha_uninform)
+
+samples_inform <- rdirichlet(1000, alpha_inform)
+
+#convert to data.frames
+df_uninform <- as.data.frame(samples_uninform)
+df_inform <- as.data.frame(samples_inform)
+
+#view the first few rows
+head(df_uninform)
+head(df_inform)
+```
+
+
+
+### 3. 
+Plot these posterior distributions (you should end up with 2 figures of box plots, one figure
+per prior specification, each figure containing 3 boxplots, one for each letter grade).
+
+```{r}
+library(ggplot2)
+
+# Reshape data to long format for easier plotting
+df_uninformative_long <- reshape2::melt(df_uninform, variable.name = "Grade", value.name = "Probability")
+df_informative_long <- reshape2::melt(df_inform, variable.name = "Grade", value.name = "Probability")
+
+#boxplot for uninformative prior
+p1 <- ggplot(df_uninformative_long, aes(x = Grade, y = Probability)) +
+  geom_boxplot(fill = "lightblue") +
+  ggtitle("Uninformative Prior Distribution")
+
+p2 <- ggplot(df_informative_long, aes(x = Grade, y = Probability)) +
+  geom_boxplot(fill = 'lightgreen')+
+  ggtitle("Informative Prior Distribution")
+
+p1
+p2
+
+```
+
+
+### 4. 
+Comment on the impact of prior choice here.
+
+> For the uninformative prior alpha = (1,1,1), the categories are more spread out. The boxplots for each grade A, C, and F show wider IQRs, meaning that there's more uncertainty in the posterior distributions. This shows the fact that the uninformative prior did not impose strong beliefs on the probabilities of each category, allowing for the observed data to play a bigger role in shaping the posterior
+
+> For the informative prior alpha = (10, 50, 40), the boxplots are narrower and more conventrated around specific values. Especially with grade C, which is represented as V2, since it had a much larger prior alpha value. This shows that the strong prior belief about the likelihood of each category (particularly the belief that "C" is much more likely) had a significant influence on the posterior distribution.
+
+# Part 3: A Bayesian Test of Inference (34 points)
+What we've been doing so far here is exploring the impact of priors using marginal distributions.
+While you could technically do some form of statistical inference with these, the inference isn't
+that interesting (is alcohol significantly different from 0? for example). In this part, we are going
+to be using conjugate priors to examine the difference in alcohol content between wines rated
+A and wines rated F 
+
+To do this, follow these steps:
+
+### 1. 
+Using a normal distribution with known variance (again, using the variances you can
+calculate from the data), specify 2 hyperparameter choices, one fairly uninformative, one
+very informative, for the alcohol content in wines rated A and wines rated F. Note, you will
+need hyperparameters for each type of wine, but those hyperparameters can be the same
+for each type of wine.
+
+```{r}
+#filter the data by wine rating
+wine_A <- wine[wine$wine_quality == "A", ]
+wine_F <- wine[wine$wine_quality == "F", ]
+
+#extract alcohol content wines rated A and F
+alcohol_A <- wine_A$alcohol
+alcohol_F <- wine_F$alcohol
+
+#number of samples
+n_A <- length(alcohol_A)
+n_F <- length(alcohol_F)
+
+#sample menas
+x_bar_A <- mean(alcohol_A)
+x_bar_F <- mean(alcohol_F)
+
+#sample variances
+var_A <- var(alcohol_A)
+var_F <- var(alcohol_F)
+
+#Uninformative prior hyperparameters (same for both A and F)
+mu_0_uninform <- 0
+tau_0_uninform <- 1000
+
+#informative prior hyperparameters
+mu_0_inform <- 0.5
+tau_0_inform <- 0.1
+
+#Posterior mean and variance calculation functions
+mu_post <- function(n, sigma_sq, x_bar, mu_0, tau_0_sq) {
+  ( (n / sigma_sq) * x_bar + (1 / tau_0_sq) * mu_0 ) / ( (n / sigma_sq) + (1 / tau_0_sq) )
+}
+
+tau_post <- function(n, sigma_sq, tau_0_sq) {
+  1 / ( (n / sigma_sq) + (1 / tau_0_sq) )
+}
+```
+
+
+### 2. 
+Calculate out the posterior distributions for alcohol content in wines with an F rating, and
+wines with an A rating. Because the posterior distribution will be a normal distribution with
+a value for the posterior mean and variance, you will have two means and two variances
+(per hyperparameter set, so you'll have 4 in total.)
+
+```{r}
+#known variance (we use the sample variance as the known variance)
+sigma_sq_A <- var_A
+sigma_sq_F <- var_F
+
+#posterior for wines rated A (uninformative prior)
+mu_post_A_uninform <- mu_post(n_A, sigma_sq_A, x_bar_A, mu_0_uninform, tau_0_uninform)
+
+tau_post_A_uninform <- tau_post(n_A, sigma_sq_A, tau_0_uninform)
+
+# Posterior for wines rated F (Uninformative Prior)
+mu_post_F_uninform <- mu_post(n_F, sigma_sq_F, x_bar_F, mu_0_uninform, tau_0_uninform)
+
+tau_post_F_uninform <- tau_post(n_F, sigma_sq_F, tau_0_uninform)
+
+# Posterior for wines rated A (Informative Prior)
+mu_post_A_inform <- mu_post(n_A, sigma_sq_A, x_bar_A, mu_0_inform, tau_0_inform)
+
+tau_post_A_inform <- tau_post(n_A, sigma_sq_A, tau_0_inform)
+
+# Posterior for wines rated F (Informative Prior)
+mu_post_F_inform <- mu_post(n_F, sigma_sq_F, x_bar_F, mu_0_inform, tau_0_inform)
+
+tau_post_F_inform <- tau_post(n_F, sigma_sq_F, tau_0_inform)
+
+# Print posterior results
+cat("Uninformative Prior (A): Mean =", mu_post_A_uninform, "Variance =", tau_post_A_uninform, "\n\n")
+cat("Uninformative Prior (F): Mean =", mu_post_F_uninform, "Variance =", tau_post_F_uninform, "\n\n")
+cat("Informative Prior (A): Mean =", mu_post_A_inform, "Variance =", tau_post_A_inform, "\n\n")
+cat("Informative Prior (F): Mean =", mu_post_F_inform, "Variance =", tau_post_F_inform, "\n\n")
+```
+
+
+### 3. 
+These posterior distributions are still for the marginal distributions of alcohol content, and
+we are interested in if the alcohol content differs between the two levels of wine quality.
+Fortunately, the difference between normal distributions is a normal distribution, so we can
+hand calculate the posterior distribution of the differences between alcohol content:
+
+#### 1. 
+The posterior mean of the difference between two normal distributions with means μx
+and μy is simply μx − μy
+
+```{r}
+#uninformative prior: posterior difference in means
+mu_diff_uninform <- mu_post_A_uninform - mu_post_F_uninform
+
+#informative prior: posterior difference in means
+mu_diff_inform <- mu_post_A_inform - mu_post_F_inform
+
+# Print posterior means
+cat("Posterior Mean Difference (Uninformative Prior):", mu_diff_uninform, "\n\n")
+
+cat("Posterior Mean Difference (Informative Prior):", mu_diff_inform, "\n\n")
+```
+
+
+#### 2. 
+The posterior variance of the difference between two normal distributions (with
+variances σ2
+x and σ2
+y ) is simply σ2
+x + σ2
+y.
+
+```{r}
+#uninformative prior: posterior difference in means and variances
+tau_diff_uninform <- tau_post_A_uninform + tau_post_F_uninform
+
+#informative prior: posterior difference in variances
+tau_diff_inform <- tau_post_A_inform + tau_post_F_inform
+
+
+# Print posterior variances
+cat("Posterior Variance Difference (Uninformative Prior):", tau_diff_uninform, "\n\n")
+
+cat("Posterior Variance Difference (Informative Prior):", tau_diff_inform, "\n")
+```
+
+
+### 4. 
+Now, you should have the posterior distributions of the differences between alcohol
+contents for wines rated A vs F. You'll have 2 of these posterior distributions because you
+had two sets of priors, one uninformative, one highly informative.
+
+#### 1. 
+Calculate the 95% HDI for each of the posterior distributions. What does this interval
+tell you about the difference between the alcohol quantities in the two grades of
+wine? Would you consider the alcohol content to be 'significantly' different?
+
+```{r}
+# Function to calculate 95% HDI for a normal distribution
+hdi_95 <- function(mu, tau) {
+  lower_bound <- mu - 1.96 * sqrt(tau)
+  upper_bound <- mu + 1.96 * sqrt(tau)
+  return(c(lower_bound, upper_bound))
+}
+
+#95% HDI for Uninformative Prior
+hdi_uninform <- hdi_95(mu_diff_uninform, tau_diff_uninform)
+
+#95% HDI for Informative Prior
+hdi_inform <- hdi_95(mu_diff_inform, tau_diff_inform)
+
+# Print the 95% HDI for both priors
+cat("95% HDI (Uninformative Prior):", hdi_uninform, "\n\n")
+cat("95% HDI (Informative Prior):", hdi_inform, "\n")
+```
+
+
+
+#### 2. 
+How does prior choice impact this?
+
+> With an uninformative prior, the posterior distribution will rely more on the data and provide a more flexible HDI. The interval may be wider because of the high variance in the prior. This will lead to more uncertainty.
+
+> With an informative prior, if the informative prior has a small variance, the HDI will likely be narrower. This could lead to overconfidence in the prior if it does not match the actual data.
+
+# Extra Credit (25 pts)
+Savvy students will notice I made an important assumption in specifying the likelihoods in part 1
+and 2, that they are normal likelihoods with known variance. This was to simplify the posterior
+from a normal-inverse-gamma to just a normal distribution. However, technically, it's a bad
+assumption to make. In this extra credit, you will be writing a small Stan analysis to test the
+difference between alcohol quantities in wines rated A and wines rated F, when we don't
+assume we know the variance of the alcohol quantities.
+
+### 1. 
+Write a Stan model that specifies normal-likelihoods with unknown means and variances.
+The priors for the means should be normal distributions, while the priors for variances
+should be a Half-Cauchy (note, this is not the conjugate prior, but we are going to be using
+Stan here, so we don't need to chose conjugate priors!). Then, using the transformed
+parameters block, calculate the difference between the means of the marginal
+distributions.
+
+```{r}
+library(rstan)
+
+# Define the Stan model as a string
+stan_model_code <- "
+data {
+    int<lower=0> N_A;         // Number of observations for wine rating A
+    int<lower=0> N_F;         // Number of observations for wine rating F
+    vector[N_A] alcohol_A;    // Alcohol quantities for wine rating A
+    vector[N_F] alcohol_F;    // Alcohol quantities for wine rating F
+}
+
+parameters {
+    real mu_A;                    // Mean alcohol quantity for wine rating A
+    real mu_F;                    // Mean alcohol quantity for wine rating F
+    real<lower=0> sigma_A;        // Standard deviation for alcohol in wine rating A
+    real<lower=0> sigma_F;        // Standard deviation for alcohol in wine rating F
+}
+
+transformed parameters {
+    real mean_diff;               // Difference between means of alcohol quantities
+    mean_diff = mu_A - mu_F;      // Difference between wine rating A and F
+}
+
+model {
+    // Priors for means: Normal distributions
+    mu_A ~ normal(0, 10);         // Prior for the mean of alcohol A
+    mu_F ~ normal(0, 10);         // Prior for the mean of alcohol F
+
+    // Priors for standard deviations: Half-Cauchy distributions
+    sigma_A ~ cauchy(0, 5);       // Half-Cauchy prior for the standard deviation of alcohol A
+    sigma_F ~ cauchy(0, 5);       // Half-Cauchy prior for the standard deviation of alcohol F
+
+    // Likelihood: Normal distributions for alcohol quantities
+    alcohol_A ~ normal(mu_A, sigma_A);
+    alcohol_F ~ normal(mu_F, sigma_F);
+}
+
+generated quantities {
+    real<lower=0> var_A;          // Variance for wine rating A
+    real<lower=0> var_F;          // Variance for wine rating F
+
+    var_A = sigma_A^2;
+    var_F = sigma_F^2;
+}
+"
+
+
+```
+
+
+### 2. 
+Run the Stan models using two sets of hyperparameters, the uninformative choices and a
+highly informative choice. Plot the posterior distributions of the differences in the means.
+
+
+
+```{r}
+set.seed(42)
+
+# Create a list for Stan's input
+stan_data <- list(
+    N_A = length(alcohol_A),
+    N_F = length(alcohol_F),
+    alcohol_A = alcohol_A,
+    alcohol_F = alcohol_F
+)
+```
+
+```{r}
+# Compile the Stan model
+stan_model <- stan_model(model_code = stan_model_code)
+
+# Fit the model using MCMC sampling
+fit <- sampling(stan_model, data = stan_data, iter = 2000, chains = 4, seed = 123)
+
+# Print a summary of the results
+print(fit, pars = c("mu_A", "mu_F", "mean_diff", "sigma_A", "sigma_F", "var_A", "var_F"))
+
+```
+```{r}
+library(ggplot2)
+
+# Extract posterior samples
+posterior_samples <- extract(fit)
+
+# Plot the posterior distribution of the mean difference
+mean_diff_samples <- posterior_samples$mean_diff
+ggplot(data.frame(mean_diff = mean_diff_samples), aes(x = mean_diff)) +
+  geom_density(fill = "skyblue", alpha = 0.6) +
+  labs(title = "Posterior Distribution of the Mean Difference",
+       x = "Mean Difference (mu_A - mu_F)",
+       y = "Density")
+
+```
+
+
+### 3. 
+How are these posteriors different/similar to those from the original analyses where we
+specified the variances as known? What was the impact of priors here?
+
+> The posterior distributions for the means are more uncertain and wider in the current analysis due to the known variances in comparison to the original analysis.
+
+> This current analysis also shows that the variances are estimated from the data, leading to additional uncertainty that wasn't present in the original analysis.
+
+> Lastly, the priors for the variances of this Half-Cauchy are more impactful in the current analysis because they regularize the variance estimates. The priors for the means are the same, but their influence is slightly stronger due to the interaction with the variance uncertainty.
+
+
 
