@@ -9,18 +9,30 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Gibbs Samplers Stub
+# The Problem:
+
+> On my honor as a student, I have neither given nor received unauthorized aid on this assignment/examination.
+
+```{r}
+dat = read.csv("coaldisasters-ds6040.csv")
+wine <- read.csv("C:\\Users\\hodge\\Desktop\\UVA_Coding_Folder\\Ds-6040-Bayesian-Machine-Learning\\whitewine-testing-ds6040.csv")
+```
+
+# Part 1: Changepoint detection and samplers (50 points)
+
+##Complete the Gibbs sampler \> update to mu: mu_vec[i] = rgamma(1, a_mu + sum(dat[1:k_samp_vec[i-1], 2]), rate = k_samp_vec[i-1] + b_mu)
+
+> update to lambda: lambda_vec[i] = rgamma(1, a_lambda + sum(dat[(k_samp_vec[i-1] + 1):112, 2]), rate = (112 - k_samp_vec[i-1]) + b_lambda)
+
 ```{r}
 #Make sure you install the Rmpfr library
 library(Rmpfr)
-dat = read.csv("coaldisasters-ds6040.csv")
 
-
-gibbs_sampler = function(iter, dat, a_mu, b_mu, a_lambda, b_lambda){
+gibbs_sampler = function(iter = 1000, dat, a_mu, b_mu, a_lambda, b_lambda){
   
   mu_vec = vector()
   lambda_vec = vector() 
-  k_prob_mat = matrix(nrow = iter+1, ncol = 111)
+  k_prob_mat = matrix(nrow = iter + 1, ncol = 111)
   k_samp_vec = vector()
   #Initialize sampler
     mu_vec[1] = rgamma(1,a_mu, rate  = b_mu)
@@ -30,8 +42,8 @@ gibbs_sampler = function(iter, dat, a_mu, b_mu, a_lambda, b_lambda){
   
   #Sampler
   for(i in 2:(iter+1)){
-    mu_vec[i] = 1 # Replace the 1 with your code
-    lambda_vec[i] = 1 # Replace the 1 with your code
+    mu_vec[i] = rgamma(1, a_mu + sum(dat[1:k_samp_vec[i-1], 2]), rate = k_samp_vec[i-1] + b_mu) # Replace the 1 with your code
+    lambda_vec[i] = rgamma(1, a_lambda + sum(dat[(k_samp_vec[i-1] + 1):112, 2]), rate = (112 - k_samp_vec[i-1]) + b_lambda) # Replace the 1 with your code
     
     l_temp = vector()
   for(j in 1:111){  
@@ -45,7 +57,69 @@ gibbs_sampler = function(iter, dat, a_mu, b_mu, a_lambda, b_lambda){
   
   return(toReturn)
 }
+```
 
+```{r}
 test = gibbs_sampler(1000, dat, a_mu = 1, b_mu = 1, a_lambda = 1, b_lambda = 1)
+```
+
+## Plot the Posterior Densities
+
+```{r}
+hist(test$mu, breaks = 30, main = "Posterior Density of μ", xlab = "μ")
+hist(test$lambda, breaks = 30, main = "Posterior Density of λ", xlab = "λ")
+hist(test$k, breaks = 30, main = "Posterior Density of k", xlab = "k (Changepoint Year)")
 
 ```
+
+## Calculate the EAP estimates w/ 95% credible intervals for mu and lamdba.
+
+```{r}
+eap_mu <- mean(test$mu)
+eap_lambda <- mean(test$lambda)
+credible_interval_mu <- quantile(test$mu, probs = c(0.025, 0.975))
+credible_interval_lambda <- quantile(test$lambda, probs = c(0.025, 0.975))
+
+print(paste("EAP estimate for μ:", eap_mu))
+print(paste("EAP estimate for λ:", eap_lambda))
+print(paste("95% credible interval for μ:", credible_interval_mu[1], "to", credible_interval_mu[2]))
+print(paste("95% credible interval for λ:", credible_interval_lambda[1], "to", credible_interval_lambda[2]))
+
+```
+
+## Provide top 5 most probable values of k
+
+```{r}
+k_freq <- sort(table(test$k), decreasing = TRUE)
+top_5_k <- head(k_freq, 5)
+print("Top 5 most probable values of k (second line):")
+print(top_5_k)
+```
+
+## Part 1 (a)
+Describe your findings. What do these EAP and credible intervals imply? And what was the most likely year of the changepoint?
+
+> The EAP estimates and 95% credible intervals for mu and lambda indicate the expected rates of coal mining disasters before and after the changepoint, with the credible intervals giving a measure of uncertainty. 
+
+> The likely year of the changepoint is reflected in the year when a significant change in safety, regulations, and other factors affecting mining disasters likely occurred.
+
+## Part 1 (b)
+Why is an EAP or credible interval not necessarily the most appropriate thing to report for the year of the changepoint?
+
+> This is becuase a changepoint is a single year, and reporting an average year (EAP) doesn't capture the specific change accurately. Instead, reporting the most probable values of k, like the top 5 years, provides clearer insights into the most likely year s of the changepoint.
+
+## (Extra Credit 10 points)
+
+
+## (Extra Credit 10 Points)
+
+
+# Part 2: Bayesian Logistic Regression with brms (50 points)
+
+## (Extra Credit 10 points):
+Figure out how to obtain the classification/misclassifcation rate from the
+two logistic regression models on the testing data.Compute and compare the performance of the two
+models using the classification/misclassification rate.
+3
+
+
